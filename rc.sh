@@ -61,9 +61,9 @@ function play_random_video() {
 
     # Add noise and seek
     echo "add noise.mov" | nc "$host" "$port"
-    sleep "0.$(get_random_number 15 50)"
-    echo "seek $(get_random_number 15 50)%" | nc "$host" "$port"
-    sleep "$(get_random_number 1 3)"
+    sleep "0.$(get_random_number 15 25)"
+    echo "seek $(get_random_number 40 60)%" | nc "$host" "$port"
+    sleep "$(get_random_number 1 2).$(get_random_number 1 80)"
 
     # Get and play a random file from the directory
     random_file=$(get_random_file "$directory")
@@ -72,7 +72,7 @@ function play_random_video() {
     sleep 0.2
     
     # Seek to a random position
-    command="seek $(get_random_number 1 30)%"
+    command="seek $(get_random_number 1 80)%"
     echo "$command"
     echo "$command" | nc "$host" "$port"
 
@@ -82,17 +82,19 @@ function play_random_video() {
     done
 }
 
-nohup start.sh > /dev/null 2>&1 &
+play_random_video
+
+# nohup start.sh > /dev/null 2>&1 &
 
 # bash start.sh &
 
 # Loop to continuously check for key presses
-while true; do
-    # Read a single character (including special keys)
-    IFS= read -rsn1 key
+# while true; do
+#     # Read a single character (including special keys)
+#     IFS= read -rsn1 key
 
-    # Check if the pressed key is the spacebar
-    if [[ "$key" == $'\x20' ]]; then  # $'\x20' is the hexadecimal representation of a space
-        play_random_video &
-    fi
-done
+#     # Check if the pressed key is the spacebar
+#     if [[ "$key" == $'\x20' ]]; then  # $'\x20' is the hexadecimal representation of a space
+#         play_random_video &
+#     fi
+# done

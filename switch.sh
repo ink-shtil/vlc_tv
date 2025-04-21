@@ -1,3 +1,5 @@
+#!/bin/bash
+
 get_random_file() {
     local directory="$1"
 
@@ -44,48 +46,34 @@ get_random_number() {
   echo "$random_number"
 }
 
-#!/bin/bash
-
 # Function to control video playback randomly
 function play_random_video() {
-    local directory="videos"
+    local directory="${1:-/vlc_tv/videos/movies}"
     local host="127.0.0.1"
     local port="4444"
 
     # Clear current playlist
-    echo "clear" | nc "$host" "$port"
-    
+    (echo "clear"; echo "quit") | nc "$host" "$port"
+
+    # Add noise and seek
+    random_noise=$(get_random_file "/vlc_tv/videos/noises")
+    (echo "add $random_noise"; echo "quit") | nc "$host" "$port"
+    sleep "5.$(get_random_number 10 80)"
+
     # Get and play a random file from the directory
     random_file=$(get_random_file "$directory")
     echo "change to $random_file"
-    echo "add $random_file" | nc "$host" "$port"
+    (echo "add $random_file"; echo "quit") | nc "$host" "$port"
     sleep 0.2
     
     # Seek to a random position
-    command="seek $(get_random_number 1 30)%"
-    echo "$command"
-    echo "$command" | nc "$host" "$port"
-    sleep "$(get_random_number 3 8)"
-    
-    # Add noise and seek
-    echo "add noise.mov" | nc "$host" "$port"
-    sleep "0.$(get_random_number 1 5)"
-    echo "seek 4" | nc "$host" "$port"
-    sleep "$(get_random_number 1 5)"
+    command="seek $(get_random_number 1 75)%"
+    (echo "$command"; echo "quit") | nc "$host" "$port"
 
-    play_random_video
+    for((i=0;i<20;i++)); do
+        random_file=$(get_random_file "$directory")
+        (echo "enqueue $random_file"; echo "quit") | nc "$host" "$port"
+    done
 }
 
-# Loop to continuously check for key presses
-while true; do
-    # Read a single character (non-blocking)
-    if read -rsn1 -t 0.1 key; then
-        # Check if the pressed key is the spacebar
-        if [[ "$key" == $'\x20' ]]; then  # $'\x20' is the hexadecimal representation of a space
-            # Run play_random_video in the background to avoid blocking the loop
-            play_random_video &
-        fi
-    fi
-    # Small delay to prevent high CPU usage
-    sleep 0.1
-done
+play_random_video $1
