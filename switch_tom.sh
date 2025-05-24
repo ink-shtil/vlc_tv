@@ -1,2 +1,2 @@
 #!/bin/bash
-bash /vlc_tv/switch.sh /media/pda/SanDisk/videos/tom/
+bash /vlc_tv/switch.sh /media/pda/SanDisk1/videos/tom/

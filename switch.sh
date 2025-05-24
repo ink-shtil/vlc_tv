@@ -1,6 +1,6 @@
 #!/bin/bash
 
-get_random_file() {
+enqueue_random_file_or_directory() {
     local directory="$1"
 
     # Check if the directory exists
@@ -9,23 +9,30 @@ get_random_file() {
         return 1
     fi
 
-    # Get the total number of files in the directory
-    local total_files=$(find "$directory" -type f | wc -l)
+    # Get the total number of files and directories in the directory
+    local total_items=$(find "$directory" -mindepth 1 -maxdepth 1 | wc -l)
 
-    # Check if there are any files in the directory
-    if [ "$total_files" -eq 0 ]; then
-        echo "No files found in directory: $directory"
+    # Check if there are any items in the directory
+    if [ "$total_items" -eq 0 ]; then
+        echo "No files or directories found in directory: $directory"
         return 1
     fi
 
-    # Generate a random number between 1 and the total number of files
-    local random_number=$((RANDOM % total_files + 1))
+    # Generate a random number between 1 and the total number of items
+    local random_number=$((RANDOM % total_items + 1))
 
-    # Get the random file using the random number
-    local random_file=$(find "$directory" -type f | head -n "$random_number" | tail -n 1)
+    # Get the random item using the random number
+    local random_item=$(find "$directory" -mindepth 1 -maxdepth 1 | head -n "$random_number" | tail -n 1)
 
-    # Print the random file name
-    echo "$random_file"
+    # Check if the random item is a directory
+    if [ -d "$random_item" ]; then
+        # Enqueue all files from the directory
+        enqueue_all_files_from_directory "$random_item"
+    else
+        # Enqueue the file
+        echo "->>> add $random_item";
+        (echo "enqueue $random_item"; echo "quit") | nc "$host" "$port"
+    fi
 }
 
 # Function to get a random number between a and b
@@ -46,6 +53,31 @@ get_random_number() {
   echo "$random_number"
 }
 
+# Function to enqueue all files from a directory
+enqueue_all_files_from_directory() {
+    local directory="$1"
+    local host="127.0.0.1"
+    local port="4444"
+
+    # Check if the directory exists
+    if [ ! -d "$directory" ]; then
+        echo "Directory does not exist: $directory"
+        return 1
+    fi
+
+    # Get all files in the directory (handles whitespaces)
+    find "$directory" -type f -print0 | while IFS= read -r -d '' file; do
+        echo "->>> add $file"
+        (echo "enqueue $file"; echo "quit") | nc "$host" "$port"
+    done
+
+    # Check if any files were processed
+    if [ -z "$(find "$directory" -type f -print0 | head -c 1)" ]; then
+        echo "No files found in directory: $directory"
+        return 1
+    fi
+}
+
 # Function to control video playback randomly
 function play_random_video() {
     local directory="${1:-/vlc_tv/videos/movies}"
@@ -56,24 +88,23 @@ function play_random_video() {
     (echo "clear"; echo "quit") | nc "$host" "$port"
 
     # Add noise and seek
-    random_noise=$(get_random_file "/vlc_tv/videos/noises")
-    (echo "add $random_noise"; echo "quit") | nc "$host" "$port"
-    sleep "5.$(get_random_number 10 80)"
-
-    # Get and play a random file from the directory
-    random_file=$(get_random_file "$directory")
-    echo "change to $random_file"
-    (echo "add $random_file"; echo "quit") | nc "$host" "$port"
-    sleep 0.2
-    
-    # Seek to a random position
-    command="seek $(get_random_number 1 75)%"
-    (echo "$command"; echo "quit") | nc "$host" "$port"
+    enqueue_random_file_or_directory "/vlc_tv/videos/noises"
+    (echo "next"; echo "quit") | nc "$host" "$port"
+    sleep "$(get_random_number 6 9)"
 
     for((i=0;i<20;i++)); do
-        random_file=$(get_random_file "$directory")
-        (echo "enqueue $random_file"; echo "quit") | nc "$host" "$port"
+        enqueue_random_file_or_directory "$directory"
     done
+
+    sleep 1
+
+    (echo "next"; echo "quit") | nc "$host" "$port"
+
+    sleep 1.5
+
+    # Seek to a random position
+    command="seek $(get_random_number 5 75)%"
+    (echo "$command"; echo "quit") | nc "$host" "$port"
 }
 
 play_random_video $1
