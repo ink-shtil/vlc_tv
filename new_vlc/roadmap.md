@@ -10,15 +10,17 @@ A list of planned features and improvements for the VLC TV project.
 - Implementation: notify-send or custom overlay script
 - Shows channel index and directory name
 
-### 2. Volume Control with Visual Feedback
-- Keybinds: Alt+Plus (volume up), Alt+Minus (volume down)
-- Brief visual volume bar (TV-like indicator)
-- VLC commands: `volup`, `voldown` via netcat
-- Optional: notify-send for volume percentage display
+### 2. Volume Control with Visual Feedback ✅
+- **COMPLETED**: Keybinds: Alt+Plus (volume up), Alt+Minus (volume down)
+- **COMPLETED**: Scripts created: [hotkey_vol_up.sh](hotkey_vol_up.sh), [hotkey_vol_down.sh](hotkey_vol_down.sh)
+- **COMPLETED**: VLC commands: `volup`, `voldown` via netcat
+- **COMPLETED**: Keybinds added to [config.sh](config.sh:110-111)
+- Future enhancement: notify-send for volume percentage display (optional)
 
-### 3. Reduce Cache Time
-- Change from 5000ms to 3000ms (3 seconds)
-- File: [start.sh](start.sh:5)
+### 3. Reduce Cache Time ✅
+- **COMPLETED**: Changed from 5000ms to 3000ms (3 seconds)
+- **COMPLETED**: File: [start.sh](start.sh:5)
+- **COMPLETED**: Set both `--file-caching=3000` and `--network-caching=3000`
 - Improves channel switch responsiveness
 - Balance between speed and streaming stability
 

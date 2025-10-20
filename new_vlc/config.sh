@@ -102,9 +102,13 @@ add_keybind() {
 }
 
 # Add keybinds for channel switching
-add_keybind "A-Right" "$USER_HOME/vlc_tv/switch_channel_next.sh" "Next Channel"
-add_keybind "A-Left" "$USER_HOME/vlc_tv/switch_channel_previous.sh" "Previous Channel"
-add_keybind "A-Up" "$USER_HOME/vlc_tv/switch_channel_current.sh" "Current Channel"
+add_keybind "A-Right" "$USER_HOME/vlc_tv/hotkey_next.sh" "Next Channel"
+add_keybind "A-Left" "$USER_HOME/vlc_tv/hotkey_prev.sh" "Previous Channel"
+add_keybind "A-Up" "$USER_HOME/vlc_tv/hotkey_current.sh" "Current Channel"
+
+# Add keybinds for volume control
+add_keybind "A-plus" "$USER_HOME/vlc_tv/hotkey_vol_up.sh" "Volume Up"
+add_keybind "A-minus" "$USER_HOME/vlc_tv/hotkey_vol_down.sh" "Volume Down"
 
 echo "All keybinds configured. Please restart Labwc or reload its configuration to apply the new keybinds."
 

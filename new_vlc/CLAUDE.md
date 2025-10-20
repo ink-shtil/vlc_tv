@@ -11,10 +11,14 @@ Raspberry Pi system that uses VLC player as a TV-like interface with channel swi
 - [switch.sh](switch.sh) - Randomly enqueues videos from selected channel directory
 - [config.sh](config.sh) - Initial setup: installs dependencies, configures autostart, sets keybinds
 
+**Hotkey Scripts:**
+- [hotkey_next.sh](hotkey_next.sh) - Next channel hotkey wrapper
+- [hotkey_prev.sh](hotkey_prev.sh) - Previous channel hotkey wrapper
+- [hotkey_current.sh](hotkey_current.sh) - Current channel hotkey wrapper
+- [hotkey_vol_up.sh](hotkey_vol_up.sh) - Volume up hotkey wrapper
+- [hotkey_vol_down.sh](hotkey_vol_down.sh) - Volume down hotkey wrapper
+
 **Helper Scripts:**
-- [switch_channel_next.sh](switch_channel_next.sh) - Wrapper for next channel
-- [switch_channel_previous.sh](switch_channel_previous.sh) - Wrapper for previous channel
-- [switch_channel_current.sh](switch_channel_current.sh) - Wrapper for current channel
 - [vlc-tv-autostart-wrapper.sh](vlc-tv-autostart-wrapper.sh) - Autostart wrapper with logging
 
 **State Files** (stored in `~/vlc_tv/`):
@@ -65,6 +69,6 @@ echo "seek 50%" | nc 127.0.0.1 4212
 
 ## Notes
 - Hardcoded paths assume user `pda` - update `USER_HOME` in scripts if different
-- VLC caching set to 5000ms (configurable in [start.sh](start.sh:5))
+- VLC caching set to 3000ms for both file and network (configurable in [start.sh](start.sh:5))
 - Random video selection uses `RANDOM` bash variable
 - Logs written to `~/vlc_tv/_start.log` and `~/vlc_tv/_switch_channel.log`
