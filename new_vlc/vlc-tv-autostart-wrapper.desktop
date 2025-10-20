@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=VLC TV Autostart Wrapper
+Exec=/home/pda/vlc_tv/vlc-tv-autostart-wrapper.sh
+X-GNOME-Autostart-enabled=true
+Comment=Runs VLC TV startup scripts in order with timestamped logging

@@ -49,11 +49,17 @@ fi
 # Read current index, default to 0 if missing/invalid
 if [ -f "$INDEX_FILE" ]; then
     current_index=$(cat "$INDEX_FILE")
-    if ! [[ "$current_index" =~ ^[0-9]+$ ]] || [ "$current_index" -ge "$num_channels" ]; then
+    if ! [[ "$current_index" =~ ^[0-9]+$ ]]; then
         current_index=0
     fi
 else
     current_index=0
+fi
+
+# Ensure current_index is in range
+if [ "$current_index" -ge "$num_channels" ] || [ "$current_index" -lt 0 ]; then
+    current_index=0
+    echo "$current_index" > "$INDEX_FILE"
 fi
 
 case "$ACTION" in

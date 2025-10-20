@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=VLC Switch Current Channel
+Exec=lxterminal -e "bash -c 'sleep 3 && bash /home/pda/vlc_tv/switch_channel.sh current'"
+Terminal=true
