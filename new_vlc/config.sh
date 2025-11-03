@@ -38,25 +38,11 @@ echo "All .desktop files copied to $AUTOSTART_DIR"
 
 # === Labwc/Openbox Keybind Setup (rc.xml) with Namespace Handling and No -L ===
 
-KEYBIND_SCRIPT_SRC="$(pwd)/hello_world_terminal.sh"
-KEYBIND_SCRIPT_DEST="$USER_HOME/vlc_tv/hello_world_terminal.sh"
 LABWC_RC="$USER_HOME/.config/labwc/rc.xml"
 NS="ob=http://openbox.org/3.4/rc"
 
-# Copy the script and make it executable
-if [ -f "$KEYBIND_SCRIPT_SRC" ]; then
-    mkdir -p "$USER_HOME/vlc_tv"
-    cp "$KEYBIND_SCRIPT_SRC" "$KEYBIND_SCRIPT_DEST"
-    chmod +x "$KEYBIND_SCRIPT_DEST"
-    echo "hello_world_terminal.sh copied to $KEYBIND_SCRIPT_DEST and made executable"
-    # Make all scripts in the VLC TV directory executable
-    if compgen -G "$USER_HOME/vlc_tv/*.sh" > /dev/null; then
-        chmod +x "$USER_HOME/vlc_tv/"*.sh
-        echo "All scripts in $USER_HOME/vlc_tv/ made executable"
-    fi
-else
-    echo "WARNING: $KEYBIND_SCRIPT_SRC not found. Skipping script copy."
-fi
+chmod +x "$USER_HOME/vlc_tv/"*.sh
+echo "All scripts in $USER_HOME/vlc_tv/ made executable"
 
 # Ensure rc.xml exists
 mkdir -p "$USER_HOME/.config/labwc"
@@ -105,10 +91,6 @@ add_keybind() {
 add_keybind "A-Right" "$USER_HOME/vlc_tv/hotkey_next.sh" "Next Channel"
 add_keybind "A-Left" "$USER_HOME/vlc_tv/hotkey_prev.sh" "Previous Channel"
 add_keybind "A-Up" "$USER_HOME/vlc_tv/hotkey_current.sh" "Current Channel"
-
-# Add keybinds for volume control
-add_keybind "A-plus" "$USER_HOME/vlc_tv/hotkey_vol_up.sh" "Volume Up"
-add_keybind "A-minus" "$USER_HOME/vlc_tv/hotkey_vol_down.sh" "Volume Down"
 
 echo "All keybinds configured. Please restart Labwc or reload its configuration to apply the new keybinds."
 

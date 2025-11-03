@@ -1,0 +1,1 @@
+scp -r . pda@192.168.0.12:/home/pda/vlc_tv

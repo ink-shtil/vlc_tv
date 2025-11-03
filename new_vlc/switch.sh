@@ -88,14 +88,21 @@ function play_random_video() {
     local host="127.0.0.1"
     local port="4212"
 
+    # Clear playlist and add initial video
+    echo "clear" | nc -q 0 "$host" "$port"
     random_file_or_directory "add" "/home/pda/vlc_tv/noises"
 
+    # Build playlist with 20 random videos
     for((i=0;i<20;i++)); do
         random_file_or_directory "enqueue" "$directory"
     done
 
+    # Enable loop for continuous playback
+    echo "loop on" | nc -q 0 "$host" "$port"
+
     sleep "$(get_random_number 2 5)"
 
+    # Start playback and seek to random position
     echo "next" | nc -q 1 "$host" "$port"
     echo "seek $(get_random_number 10 60)%" | nc -q 0 "$host" "$port"
 }
