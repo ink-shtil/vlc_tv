@@ -1,10 +1,12 @@
 #!/bin/bash
 
+# Load player abstraction layer
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/player_control.sh"
+
 random_file_or_directory() {
     local command="$1"
     local directory="$2"
-    local host="127.0.0.1"
-    local port="4212"
 
     # Check if the directory exists
     if [ ! -d "$directory" ]; then
@@ -34,7 +36,7 @@ random_file_or_directory() {
     else
         # Enqueue or add the file
         echo "->>> $command $random_item"
-        echo "$command $random_item" | nc -q 0 "$host" "$port"
+        send_command "$command" "$random_item"
     fi
 }
 
@@ -60,8 +62,6 @@ get_random_number() {
 enqueue_all_files_from_directory() {
     local command="$1"
     local directory="$2"
-    local host="127.0.0.1"
-    local port="4212"
 
     # Check if the directory exists
     if [ ! -d "$directory" ]; then
@@ -72,7 +72,7 @@ enqueue_all_files_from_directory() {
     # Get all files in the directory (handles whitespaces)
     find "$directory" -type f -print0 | while IFS= read -r -d '' file; do
         echo "->>> $command $file"
-        echo "$command $file" | nc -q 0 "$host" "$port"
+        send_command "$command" "$file"
     done
 
     # Check if any files were processed
@@ -85,11 +85,9 @@ enqueue_all_files_from_directory() {
 # Function to control video playback randomly
 function play_random_video() {
     local directory="${1:-/home/pda/vlc_tv/noises}"
-    local host="127.0.0.1"
-    local port="4212"
 
     # Clear playlist and add initial video
-    echo "clear" | nc -q 0 "$host" "$port"
+    send_command "clear"
     random_file_or_directory "add" "/home/pda/vlc_tv/noises"
 
     # Build playlist with 20 random videos
@@ -98,13 +96,14 @@ function play_random_video() {
     done
 
     # Enable loop for continuous playback
-    echo "loop on" | nc -q 0 "$host" "$port"
+    send_command "loop" "on"
 
     sleep "$(get_random_number 2 5)"
 
     # Start playback and seek to random position
-    echo "next" | nc -q 1 "$host" "$port"
-    echo "seek $(get_random_number 10 60)%" | nc -q 0 "$host" "$port"
+    send_command "next"
+    local seek_percent=$(get_random_number 10 60)
+    send_command "seek" "${seek_percent}%"
 }
 
 play_random_video "$1"

@@ -1,7 +1,36 @@
 #!/bin/bash
-# Start VLC with remote control interface optimized for TV-like experience
+# Start media player (VLC or KODI) with remote control interface optimized for TV-like experience
 # To enable looping of the playlist, connect to the rc interface (e.g., with nc or telnet) and use the 'loop' command.
 
+# Load player configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/player_control.sh"
+
+# ========== Player Selection ==========
+# PLAYER_TYPE is loaded from player_control.sh (from player_config.txt or defaults to "vlc")
+
+if [ "$PLAYER_TYPE" = "kodi" ]; then
+    # ========== Launch KODI ==========
+    # KODI typically runs as a service or standalone application
+    # Check if kodi-standalone is available (for systems without window manager)
+    # Otherwise use regular kodi command
+    
+    DISPLAY_NUM="${DISPLAY_NUM:-:0}"
+    export DISPLAY="$DISPLAY_NUM"
+    
+    # Try kodi-standalone first (better for TV/embedded systems), fall back to kodi
+    if command -v kodi-standalone >/dev/null 2>&1; then
+        exec kodi-standalone
+    elif command -v kodi >/dev/null 2>&1; then
+        # Launch KODI in fullscreen mode
+        exec kodi --standalone --fullscreen
+    else
+        echo "Error: KODI not found. Please install kodi or kodi-standalone." >&2
+        exit 1
+    fi
+fi
+
+# ========== VLC Configuration ==========
 # ========== Configuration Mode ==========
 # Set to 1 to use advanced configurable options below
 # Set to 0 to use simple original command (fast fallback)
@@ -60,8 +89,8 @@ VLC_OPTS="$VLC_OPTS --live-caching=$LIVE_CACHE"
 # --- Core Display Options (always enabled) ---
 VLC_OPTS="$VLC_OPTS --no-osd"                # Disable on-screen display
 VLC_OPTS="$VLC_OPTS --no-keyboard-events"    # Disable VLC keyboard shortcuts
+#VLC_OPTS="$VLC_OPTS --vout=gl"               # Use OpenGL video output
 VLC_OPTS="$VLC_OPTS -f"                      # Fullscreen mode
-VLC_OPTS="$VLC_OPTS --vout=gl"               # Use OpenGL video output
 
 # NOTE: Playlist loop is controlled dynamically via RC interface (not --loop flag)
 # This allows better control when switching channels
@@ -83,6 +112,7 @@ VLC_OPTS="$VLC_OPTS --vout=gl"               # Use OpenGL video output
 [ "$AVCODEC_SKIP_LOOP" = "1" ] && VLC_OPTS="$VLC_OPTS --avcodec-skiploopfilter=all"
 
 # ========== Launch VLC ==========
+# Only reached if PLAYER_TYPE is "vlc" (default)
 
 if [ "$USE_ADVANCED_CONFIG" = "1" ]; then
     # Advanced mode: Use configurable options

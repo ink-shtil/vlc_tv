@@ -1,5 +1,12 @@
 # 📺 VLC TV Roadmap
 
+KODI debug
+
+- test seek and gonext commands
+- add run random channel feature
+
+
+
 A list of planned features and improvements for the VLC TV project.
 
 ## 🎯 Planned High-Priority Features

@@ -15,7 +15,7 @@ echo "$(date '+%Y-%m-%d %H:%M:%S') Launching VLC in LXTerminal..."
 lxterminal -e "bash /home/pda/vlc_tv/start.sh" &
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') Waiting 2 seconds before running switch_channel.sh current..."
-sleep 2
+sleep 5
 echo "$(date '+%Y-%m-%d %H:%M:%S') Starting switch_channel.sh current in background..."
 (
   echo "========== switch_channel.sh current started at $(date '+%Y-%m-%d %H:%M:%S') =========="

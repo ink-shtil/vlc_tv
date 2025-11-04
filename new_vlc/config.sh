@@ -8,7 +8,7 @@ set -x  # Enable debug output
 
 # Install dependencies
 sudo apt-get update
-sudo apt-get install -y netcat-traditional unclutter xmlstarlet
+sudo apt-get install -y netcat-traditional unclutter xmlstarlet curl
 
 USER_HOME="/home/pda"
 AUTOSTART_DIR="$USER_HOME/.config/autostart"
@@ -31,6 +31,102 @@ echo "Video folder set to $VIDEO_DIR in $CHANNELS_DIR_FILE"
 # Reset channel index
 echo "0" > "$INDEX_FILE"
 echo "Channel index reset to 0 in $INDEX_FILE"
+
+# === Player Configuration ===
+PLAYER_CONFIG_FILE="$USER_HOME/vlc_tv/player_config.txt"
+
+# Function to setup KODI keymap
+setup_kodi_keymap() {
+    local kodi_keymap_dir="$USER_HOME/.kodi/userdata/keymaps"
+    local kodi_keymap_file="$kodi_keymap_dir/keyboard.xml"
+    
+    echo ""
+    echo "=== Configuring KODI Keymap ==="
+    
+    # Create keymaps directory if it doesn't exist
+    mkdir -p "$kodi_keymap_dir"
+    
+    # Backup existing keymap if it exists
+    if [ -f "$kodi_keymap_file" ]; then
+        cp "$kodi_keymap_file" "${kodi_keymap_file}.bak"
+        echo "Backed up existing keymap to ${kodi_keymap_file}.bak"
+    fi
+    
+    # Create keymap XML with arrow key bindings
+    cat > "$kodi_keymap_file" <<EOF
+<keymap>
+  <global>
+    <keyboard>
+      <right>System.ExecWait($USER_HOME/vlc_tv/hotkey_next.sh)</right>
+      <left>System.ExecWait($USER_HOME/vlc_tv/hotkey_prev.sh)</left>
+      <up>System.ExecWait($USER_HOME/vlc_tv/hotkey_current.sh)</up>
+    </keyboard>
+    <remote>
+      <right>System.ExecWait($USER_HOME/vlc_tv/hotkey_next.sh)</right>
+      <left>System.ExecWait($USER_HOME/vlc_tv/hotkey_prev.sh)</left>
+      <up>System.ExecWait($USER_HOME/vlc_tv/hotkey_current.sh)</up>
+    </remote>
+  </global>
+</keymap>
+EOF
+    
+    echo "KODI keymap created at $kodi_keymap_file"
+    echo "Mapped keys:"
+    echo "  - Right Arrow -> Next Channel"
+    echo "  - Left Arrow -> Previous Channel"
+    echo "  - Up Arrow -> Current Channel"
+    echo ""
+    echo "Note: KODI must be restarted for keymap changes to take effect."
+}
+
+echo ""
+echo "=== Media Player Configuration ==="
+echo "Select media player:"
+echo "  1) VLC"
+echo "  2) KODI (default)"
+read -rp "Enter choice [2]: " PLAYER_CHOICE
+
+if [ "$PLAYER_CHOICE" = "1" ]; then
+    PLAYER_TYPE="vlc"
+    echo "Player type set to: VLC"
+elif [ -z "$PLAYER_CHOICE" ] || [ "$PLAYER_CHOICE" = "2" ]; then
+    PLAYER_TYPE="kodi"
+    echo "Player type set to: KODI"
+    
+    # KODI-specific configuration
+    read -rp "KODI host [127.0.0.1]: " KODI_HOST
+    KODI_HOST="${KODI_HOST:-127.0.0.1}"
+    
+    read -rp "KODI JSON-RPC port [8080]: " KODI_PORT
+    KODI_PORT="${KODI_PORT:-8080}"
+    
+    read -rp "KODI username (leave empty for no auth) [kodi]: " KODI_USER
+    KODI_USER="${KODI_USER:-kodi}"
+    
+    read -rp "KODI password (leave empty for no auth) [kodi]: " KODI_PASS
+    KODI_PASS="${KODI_PASS:-kodi}"
+else
+    echo "Invalid choice, defaulting to KODI"
+    PLAYER_TYPE="kodi"
+fi
+
+# Save player configuration
+mkdir -p "$USER_HOME/vlc_tv"
+{
+    echo "PLAYER_TYPE=$PLAYER_TYPE"
+    if [ "$PLAYER_TYPE" = "kodi" ]; then
+        echo "KODI_HOST=$KODI_HOST"
+        echo "KODI_PORT=$KODI_PORT"
+        echo "KODI_USER=$KODI_USER"
+        echo "KODI_PASS=$KODI_PASS"
+    fi
+} > "$PLAYER_CONFIG_FILE"
+echo "Player configuration saved to $PLAYER_CONFIG_FILE"
+
+# Setup KODI keymap if KODI is selected
+if [ "$PLAYER_TYPE" = "kodi" ]; then
+    setup_kodi_keymap
+fi
 
 mkdir -p "$AUTOSTART_DIR"
 cp ./*.desktop "$AUTOSTART_DIR/"
