@@ -7,7 +7,22 @@ import random
 import json
 import socket
 
-TV_ROOT = "/media/usb/videos"   # change to your actual mount path
+# Default/fallback TV root (used only if auto-detection fails)
+TV_ROOT = "/media/usb/videos"   # change to your actual mount path if needed
+
+# Where we remember the last detected TV root directory
+TV_ROOT_CACHE = "/tmp/tv_root_path.txt"
+
+# Candidate base directories to search for mounted USB sticks
+CANDIDATE_BASE_DIRS = [
+    "/media",
+    "/mnt",
+    "/media/pi",
+    "/media/usb",
+    "/run/media",
+    "/run/media/pi",
+]
+
 MPV_IPC_SOCKET = "/tmp/tv-mpv.sock"
 MPV_CMD = [
     "mpv",
@@ -34,6 +49,137 @@ PLAYLIST_PATH = "/tmp/tv_playlist.m3u"
 mpv_proc = None
 cec_proc = None
 last_key_time = 0.0
+
+
+def find_tv_root_in_mounts():
+    """Search existing mountpoints for a dir named 'videos' or 'channels'.
+
+    Returns an absolute path to that dir, or None if not found.
+    """
+
+    target_names = {"videos", "channels"}
+
+    for base in CANDIDATE_BASE_DIRS:
+        if not os.path.isdir(base):
+            continue
+        for entry in os.listdir(base):
+            mp = os.path.join(base, entry)
+            if not os.path.isdir(mp):
+                continue
+            # Look for /.../videos or /.../channels
+            for name in target_names:
+                candidate = os.path.join(mp, name)
+                if os.path.isdir(candidate):
+                    print(f"[TV] Found TV root in mounts: {candidate}", flush=True)
+                    return candidate
+    return None
+
+
+def _iter_lsblk_parts(dev):
+    """Yield partition entries from an lsblk JSON blockdevice tree."""
+
+    if dev.get("type") == "part":
+        yield dev
+    for ch in dev.get("children") or []:
+        for part in _iter_lsblk_parts(ch):
+            yield part
+
+
+def mount_candidate_usb_and_find_root():
+    """Try to mount a removable USB partition and then find TV root.
+
+    Uses `lsblk -J` to detect removable partitions. Requires mount privileges.
+    Returns the detected TV root path, or None on failure.
+    """
+
+    try:
+        out = subprocess.check_output(
+            ["lsblk", "-J", "-o", "NAME,MOUNTPOINT,RM,TYPE,LABEL"],
+            text=True,
+        )
+        info = json.loads(out)
+    except Exception as e:
+        print(f"[TV] lsblk failed: {e}", flush=True)
+        return None
+
+    for dev in info.get("blockdevices") or []:
+        for part in _iter_lsblk_parts(dev):
+            # Only consider removable partitions that are not yet mounted
+            rm = str(part.get("rm", "0"))
+            if rm not in ("1", "True", "true"):
+                continue
+            if part.get("mountpoint"):
+                continue  # already mounted; find_tv_root_in_mounts() should handle it
+
+            name = part.get("name")  # e.g. "sda1"
+            if not name:
+                continue
+
+            mountpoint = f"/mnt/tv_usb_{name}"
+            os.makedirs(mountpoint, exist_ok=True)
+
+            devpath = f"/dev/{name}"
+            print(f"[TV] Mounting {devpath} -> {mountpoint}", flush=True)
+            res = subprocess.run(["mount", devpath, mountpoint])
+            if res.returncode != 0:
+                print(f"[TV] mount failed for {devpath} (code {res.returncode})", flush=True)
+                continue
+
+            # After mounting, see if we now have videos/channels
+            root = find_tv_root_in_mounts()
+            if root:
+                return root
+
+    return None
+
+
+def get_tv_root():
+    """Get the TV root directory, auto-detecting a USB with videos/channels.
+
+    1) If cache file exists and path is valid, use it.
+    2) Otherwise search existing mounts.
+    3) If still not found, try to mount a removable USB and search again.
+    4) Cache the result in TV_ROOT_CACHE.
+    5) If everything fails, fall back to TV_ROOT constant.
+    """
+
+    # 1) Use cached path if valid
+    if os.path.isfile(TV_ROOT_CACHE):
+        try:
+            with open(TV_ROOT_CACHE, "r", encoding="utf-8") as f:
+                cached = f.read().strip()
+            if cached and os.path.isdir(cached):
+                print(f"[TV] Using cached TV root: {cached}", flush=True)
+                return cached
+        except Exception as e:
+            print(f"[TV] Failed to read cache {TV_ROOT_CACHE}: {e}", flush=True)
+
+    # 2) Search existing mounts
+    root = find_tv_root_in_mounts()
+    if not root:
+        # 3) Try to mount removable USB and search again
+        root = mount_candidate_usb_and_find_root()
+
+    if not root:
+        # 5) Fall back to static TV_ROOT if it exists
+        if os.path.isdir(TV_ROOT):
+            print(f"[TV] Falling back to static TV_ROOT: {TV_ROOT}", flush=True)
+            root = TV_ROOT
+        else:
+            raise RuntimeError(
+                "Could not find USB with 'videos' or 'channels' directory, "
+                f"and fallback TV_ROOT does not exist: {TV_ROOT}"
+            )
+
+    # 4) Cache the discovered path
+    try:
+        with open(TV_ROOT_CACHE, "w", encoding="utf-8") as f:
+            f.write(root + "\n")
+    except Exception as e:
+        print(f"[TV] Failed to write cache file {TV_ROOT_CACHE}: {e}", flush=True)
+
+    print(f"[TV] Using TV root: {root}", flush=True)
+    return root
 
 
 def list_channels(root: str):
@@ -116,6 +262,15 @@ def ensure_mpv() -> bool:
 
     try:
         print("[TV] Starting persistent mpv with IPC...", flush=True)
+
+        # Remove stale IPC socket if it exists from a previous run
+        if os.path.exists(MPV_IPC_SOCKET):
+            try:
+                os.remove(MPV_IPC_SOCKET)
+                print("[TV] Removed stale mpv IPC socket", flush=True)
+            except Exception as e:
+                print(f"[TV] Failed to remove stale IPC socket: {e}", flush=True)
+
         # Keep stdout/stderr visible for debugging
         mpv_proc = subprocess.Popen(MPV_CMD)
     except Exception as e:
@@ -140,6 +295,8 @@ def mpv_ipc_send(command):
     Example: mpv_ipc_send(["loadlist", PLAYLIST_PATH, "replace"])
     """
 
+    global mpv_proc
+
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(1.0)
@@ -155,6 +312,28 @@ def mpv_ipc_send(command):
             sock.close()
     except Exception as e:
         print(f"[TV] mpv IPC error ({command}): {e}", flush=True)
+        # Mark mpv as dead so the next switch() call restarts it
+        mpv_proc = None
+
+
+def shutdown_mpv():
+    """Gracefully stop mpv and clean up the IPC socket."""
+
+    # Try to ask mpv to quit via IPC (ignore errors)
+    try:
+        mpv_ipc_send(["quit"])
+    except Exception:
+        pass
+
+    # Then force-stop the process if still running
+    stop_process(mpv_proc)
+
+    # Finally, remove any leftover socket
+    if os.path.exists(MPV_IPC_SOCKET):
+        try:
+            os.remove(MPV_IPC_SOCKET)
+        except Exception:
+            pass
 
 
 def switch(channels, idx):
@@ -276,5 +455,5 @@ if __name__ == "__main__":
     try:
         main()
     finally:
-        stop_process(mpv_proc)
+        shutdown_mpv()
         stop_process(cec_proc)
