@@ -1,0 +1,25 @@
+pda@raspberrypi:~ $ python3 ~/tv-sim/tv_cec_debug.py
+[CEC-DEBUG] Loaded 10 channels from /media/usb/videos
+[CEC-DEBUG] Starting cec-client: stdbuf -oL cec-client -f
+[CEC-DEBUG] Sent initial 'scan' command
+[CEC-DEBUG] Listening to cec-client output. Press Ctrl+C to stop.
+[19:46:45] KEY: USER_CONTROL
+[19:46:45] KEY: UP
+[19:46:45] CHANNEL -> 2/10: 02_soviet
+[19:46:48] KEY: USER_CONTROL
+[19:46:48] KEY: UP
+[19:46:48] CHANNEL -> 3/10: 03_tom
+[19:46:50] KEY: USER_CONTROL
+[19:46:50] KEY: UP
+[19:46:50] CHANNEL -> 4/10: 04_russian
+[19:46:53] KEY: USER_CONTROL
+[19:46:53] KEY: UP
+[19:46:53] CHANNEL -> 5/10: 05_classic
+[19:46:58] KEY: USER_CONTROL
+[19:46:58] KEY: RIGHT
+[19:46:59] KEY: USER_CONTROL
+[19:46:59] KEY: LEFT
+[19:47:03] KEY: USER_CONTROL
+[19:47:03] KEY: OK
+[19:47:05] KEY: USER_CONTROL
+[19:47:05] KEY: OK

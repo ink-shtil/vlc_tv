@@ -1,0 +1,7 @@
+- add a usb auto mounter for access to channels (videos dir)
+- logic with multi series dirs
+- problem with loosing sound
+- OK btn -> random channel
+- add noise on switch
+- add startup tv service (as random channel + channel source detection)
+- add one main install script (config a pi from scratch)

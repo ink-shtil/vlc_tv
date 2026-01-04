@@ -1,0 +1,112 @@
+pda@raspberrypi:~ $ cec-client -f
+== skipped log-file parameter: no file given ==
+No device type given. Using 'recording device'
+CEC Parser created - libCEC version 7.0.0
+no serial port given. trying autodetect: 
+ path:     /sys/devices/platform/soc@107c000000/107c701400.hdmi/cec0
+ com port: /dev/cec0
+
+opening a connection to the CEC adapter...
+DEBUG:   [              13]     Broadcast (F): osd name set to 'Broadcast'
+DEBUG:   [              13]     CLinuxCECAdapterCommunication::Open - m_path=/dev/cec0 m_fd=3 bStartListening=1
+DEBUG:   [              13]     CLinuxCECAdapterCommunication::Open - ioctl CEC_ADAP_G_PHYS_ADDR - addr=4000
+DEBUG:   [              13]     CLinuxCECAdapterCommunication::Open - ioctl CEC_ADAP_S_LOG_ADDRS - log_addr_mask=0000 num_log_addrs=0
+DEBUG:   [              14]     CLinuxCECAdapterCommunication::Open - ioctl CEC_ADAP_S_LOG_ADDRS - log_addr_mask=8000 num_log_addrs=1
+NOTICE:  [              14]     connection opened
+DEBUG:   [              14]     CLinuxCECAdapterCommunication::Process - CEC_DQEVENT - CEC_EVENT_STATE_CHANGE - log_addr_mask=8000 phys_addr=4000
+DEBUG:   [              14]     processor thread started
+DEBUG:   [              14]     << Broadcast (F) -> TV (0): POLL
+TRAFFIC: [              14]     << f0
+DEBUG:   [             332]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=1 addr=f0 opcode=ffffffff
+DEBUG:   [             332]     >> POLL sent
+DEBUG:   [             332]     TV (0): device status changed into 'present'
+DEBUG:   [             332]     << requesting vendor ID of 'TV' (0)
+TRAFFIC: [             332]     << f0:8c
+DEBUG:   [             399]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=2 addr=f0 opcode=8c
+DEBUG:   [             534]     CLinuxCECAdapterCommunication::Process - ioctl CEC_RECEIVE - rx_status=01 len=5 addr=0f opcode=87
+TRAFFIC: [             534]     >> 0f:87:08:00:46
+DEBUG:   [             534]     >> TV (0) -> Broadcast (F): device vendor id (87)
+DEBUG:   [             534]     TV (0): vendor = Sony (080046)
+DEBUG:   [             534]     expected response received (87: device vendor id)
+DEBUG:   [             534]     registering new CEC client - v7.0.0
+NOTICE:  [             534]     setting HDMI port to 1 on device TV (0)
+DEBUG:   [             534]     changing physical address to 1000
+DEBUG:   [             534]     detecting logical address for type 'recording device'
+DEBUG:   [             534]     trying logical address 'Recorder 1'
+DEBUG:   [             534]     << Recorder 1 (1) -> Recorder 1 (1): POLL
+TRAFFIC: [             534]     << 11
+DEBUG:   [             606]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=24 len=1 addr=11 opcode=ffffffff
+TRAFFIC: [             606]     << 11
+DEBUG:   [             678]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=24 len=1 addr=11 opcode=ffffffff
+DEBUG:   [             678]     >> POLL not sent
+DEBUG:   [             678]     using logical address 'Recorder 1'
+DEBUG:   [             678]     Recorder 1 (1): device status changed into 'handled by libCEC'
+DEBUG:   [             678]     Recorder 1 (1): power status changed from 'unknown' to 'on'
+DEBUG:   [             678]     Recorder 1 (1): vendor = Pulse Eight (001582)
+DEBUG:   [             678]     Recorder 1 (1): CEC version 1.4
+DEBUG:   [             678]     AllocateLogicalAddresses - device '0', type 'recording device', LA '1'
+DEBUG:   [             678]     Recorder 1 (1): physical address changed from ffff to 1000
+DEBUG:   [             678]     CLinuxCECAdapterCommunication::SetLogicalAddresses - ioctl CEC_ADAP_S_LOG_ADDRS - log_addr_mask=0000 num_log_addrs=0
+DEBUG:   [             678]     CLinuxCECAdapterCommunication::Process - CEC_DQEVENT - CEC_EVENT_STATE_CHANGE - log_addr_mask=0000 phys_addr=4000
+DEBUG:   [             823]     CLinuxCECAdapterCommunication::Process - CEC_DQEVENT - CEC_EVENT_STATE_CHANGE - log_addr_mask=0002 phys_addr=4000
+DEBUG:   [             823]     changing physical address to 4000
+DEBUG:   [             823]     CLinuxCECAdapterCommunication::SetLogicalAddresses - ioctl CEC_ADAP_S_LOG_ADDRS - log_addr_mask=0002 num_log_addrs=1
+DEBUG:   [             823]     Recorder 1 (1): physical address changed from 1000 to 4000
+DEBUG:   [             823]     << Recorder 1 (1) -> broadcast (F): physical address 4000
+TRAFFIC: [             823]     << 1f:84:40:00:01
+DEBUG:   [             823]     Recorder 1 (1): osd name set to 'CECTester'
+DEBUG:   [             823]     Recorder 1 (1): menu language set to 'eng'
+DEBUG:   [             823]     using provided physical address 4000
+NOTICE:  [             823]     CEC client registered: libCEC version = 7.0.0, client version = 7.0.0, firmware version = 0, logical address(es) = Recorder 1 (1) , physical address: 4.0.0.0, compiled on Linux ... , features: P8_USB, DRM, P8_detect, Exynos, Linux_kernel_API, AOCEC
+DEBUG:   [             823]     << Recorder 1 (1) -> TV (0): OSD name 'CECTester'
+DEBUG:   [            1357]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=5 addr=1f opcode=84
+TRAFFIC: [            1357]     << 10:47:43:45:43:54:65:73:74:65:72
+DEBUG:   [            1362]     CLinuxCECAdapterCommunication::Process - ioctl CEC_RECEIVE - rx_status=01 len=2 addr=01 opcode=46
+TRAFFIC: [            1362]     >> 01:46
+DEBUG:   [            1362]     >> TV (0) -> Recorder 1 (1): give osd name (46)
+DEBUG:   [            1367]     CLinuxCECAdapterCommunication::Process - ioctl CEC_RECEIVE - rx_status=01 len=2 addr=01 opcode=8c
+DEBUG:   [            1420]     CLinuxCECAdapterCommunication::Process - ioctl CEC_RECEIVE - rx_status=01 len=2 addr=01 opcode=46
+DEBUG:   [            1699]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=11 addr=10 opcode=47
+DEBUG:   [            1699]     << requesting power status of 'TV' (0)
+TRAFFIC: [            1699]     << 10:8f
+DEBUG:   [            1765]     CLinuxCECAdapterCommunication::Process - ioctl CEC_RECEIVE - rx_status=01 len=2 addr=01 opcode=8c
+DEBUG:   [            1828]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=2 addr=10 opcode=8f
+DEBUG:   [            1828]     << Recorder 1 (1) -> TV (0): OSD name 'CECTester'
+TRAFFIC: [            1828]     << 10:47:43:45:43:54:65:73:74:65:72
+DEBUG:   [            1915]     CLinuxCECAdapterCommunication::Process - ioctl CEC_RECEIVE - rx_status=01 len=3 addr=01 opcode=90
+DEBUG:   [            2194]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=11 addr=10 opcode=47
+TRAFFIC: [            2194]     >> 01:8c
+DEBUG:   [            2194]     >> TV (0) -> Recorder 1 (1): give device vendor id (8C)
+DEBUG:   [            2195]     << Recorder 1 (1) -> TV (0): vendor id Pulse Eight (1582)
+TRAFFIC: [            2195]     << 1f:87:00:15:82
+DEBUG:   [            2334]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=5 addr=1f opcode=87
+TRAFFIC: [            2334]     >> 01:46
+DEBUG:   [            2334]     >> TV (0) -> Recorder 1 (1): give osd name (46)
+DEBUG:   [            2334]     << Recorder 1 (1) -> TV (0): OSD name 'CECTester'
+TRAFFIC: [            2334]     << 10:47:43:45:43:54:65:73:74:65:72
+DEBUG:   [            2617]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=11 addr=10 opcode=47
+TRAFFIC: [            2617]     >> 01:8c
+DEBUG:   [            2617]     >> TV (0) -> Recorder 1 (1): give device vendor id (8C)
+DEBUG:   [            2617]     << Recorder 1 (1) -> TV (0): vendor id Pulse Eight (1582)
+TRAFFIC: [            2617]     << 1f:87:00:15:82
+DEBUG:   [            2756]     CLinuxCECAdapterCommunication::Write - ioctl CEC_TRANSMIT - tx_status=01 len=5 addr=1f opcode=87
+TRAFFIC: [            2756]     >> 01:90:00
+DEBUG:   [            2756]     >> TV (0) -> Recorder 1 (1): report power status (90)
+DEBUG:   [            2756]     TV (0): power status changed from 'unknown' to 'on'
+waiting for input
+DEBUG:   [            2756]     expected response received (90: report power status)
+DEBUG:   [            7912]     CLinuxCECAdapterCommunication::Process - ioctl CEC_RECEIVE - rx_status=01 len=3 addr=01 opcode=44
+TRAFFIC: [            7912]     >> 01:44:01
+DEBUG:   [            7912]     >> TV (0) -> Recorder 1 (1): user control pressed (44)
+DEBUG:   [            7912]     SetCurrentButton up (1) D:0ms cur:0
+DEBUG:   [            7912]     key pressed: up (1) current(ff) duration(0)
+DEBUG:   [            7912]     Changed key up (1) D:0ms cur:ff
+DEBUG:   [            7912]     key pressed: up (1, 0)
+DEBUG:   [            7912]     making Recorder 1 (1) the active source
+NOTICE:  [            7912]     >> source activated: Recorder 1 (1)
+DEBUG:   [            7912]     CheckKeypressTimeout T:6081.067
+DEBUG:   [            7912]     Key up: idle (duration:0) (1) timeout:500ms (rel:500,rep:0,prs:1,rel:0)
+DEBUG:   [            8034]     CLinuxCECAdapterCommunication::Process - ioctl CEC_RECEIVE - rx_status=01 len=2 addr=01 opcode=45
+TRAFFIC: [            8034]     >> 01:45
+DEBUG:   [            8034]     >> TV (0) -> Recorder 1 (1): user control release (45)
+DEBUG:   [            8034]     key released: up (1) D:122ms
