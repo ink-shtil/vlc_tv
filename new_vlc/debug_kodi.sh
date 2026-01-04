@@ -1,6 +1,6 @@
 #!/bin/bash
-# Debug script for KODI channel switching
-# Tests each JSON-RPC command individually to identify issues
+# Step-by-step debug script for KODI remote control
+# Tests default port authentication and all player_control.sh commands
 
 USER_HOME="${HOME:-/home/pda}"
 PLAYER_CONFIG_FILE="$USER_HOME/vlc_tv/player_config.txt"
@@ -29,8 +29,20 @@ if [ -f "$PLAYER_CONFIG_FILE" ]; then
     done < "$PLAYER_CONFIG_FILE"
 fi
 
+# Test video file
+TEST_VIDEO="/media/pda/SanDisk/videos/05_classic/The_Bank_1915.mp4"
 
-# Send JSON-RPC command and show response
+# Function to escape string for JSON
+escape_json_string() {
+    local str="$1"
+    # Escape backslashes first
+    str="${str//\\/\\\\}"
+    # Escape double quotes
+    str="${str//\"/\\\"}"
+    echo "$str"
+}
+
+# Function to send JSON-RPC command and show response
 send_kodi_debug() {
     local method="$1"
     local params="$2"
@@ -51,36 +63,25 @@ send_kodi_debug() {
 EOF
 )
     
-    echo "URL: $jsonrpc_url"
-    echo "Payload:"
-    echo "$json_payload" | jq '.' 2>/dev/null || echo "$json_payload"
+    echo "Request:"
+    echo "  URL: $jsonrpc_url"
+    echo "  Method: $method"
+    echo "  Payload:"
+    echo "$json_payload" | sed 's/^/    /'
     echo ""
-    echo "Response:"
     
-    # Build and execute curl command with verbose output
+    # Build curl command with auth if needed
+    local curl_cmd
     local response_file="/tmp/kodi_response_$$.json"
-    local stderr_file="/tmp/kodi_stderr_$$.txt"
     
     if [ -n "$KODI_USER" ] && [ -n "$KODI_PASS" ]; then
-        curl -v -X POST -u "${KODI_USER}:${KODI_PASS}" \
-            -H "Content-Type: application/json" \
-            -d "$json_payload" \
-            -w "\nHTTP_CODE:%{http_code}" \
-            -o "$response_file" \
-            "$jsonrpc_url" 2>"$stderr_file"
+        curl_cmd="curl -s -X POST -u ${KODI_USER}:${KODI_PASS} -H \"Content-Type: application/json\" -d '$json_payload' -w \"\nHTTP_CODE:%{http_code}\" -o \"$response_file\" \"$jsonrpc_url\""
     else
-        curl -v -X POST \
-            -H "Content-Type: application/json" \
-            -d "$json_payload" \
-            -w "\nHTTP_CODE:%{http_code}" \
-            -o "$response_file" \
-            "$jsonrpc_url" 2>"$stderr_file"
+        curl_cmd="curl -s -X POST -H \"Content-Type: application/json\" -d '$json_payload' -w \"\nHTTP_CODE:%{http_code}\" -o \"$response_file\" \"$jsonrpc_url\""
     fi
     
-    # Show curl verbose output (connection info)
-    echo "Curl verbose output:"
-    cat "$stderr_file" 2>/dev/null || echo "(No verbose output)"
-    rm -f "$stderr_file"
+    # Execute curl command
+    eval "$curl_cmd" > /dev/null 2>&1
     
     # Extract HTTP code
     local http_code
@@ -91,17 +92,14 @@ EOF
         sed -i '$ d' "$response_file" 2>/dev/null || sed '$ d' "$response_file" 2>/dev/null
     fi
     
-    echo ""
-    echo "HTTP Status Code: ${http_code:-unknown}"
-    echo ""
-    
-    # Show response body if any
+    echo "Response:"
+    echo "  HTTP Status: ${http_code:-unknown}"
     if [ -f "$response_file" ] && [ -s "$response_file" ]; then
-        echo "Response body:"
-        cat "$response_file" | jq '.' 2>/dev/null || cat "$response_file"
+        echo "  Body:"
+        cat "$response_file" | jq '.' 2>/dev/null || cat "$response_file" | sed 's/^/    /'
         rm -f "$response_file"
     else
-        echo "(No response body)"
+        echo "  (No response body)"
         rm -f "$response_file"
     fi
     echo ""
@@ -111,7 +109,7 @@ EOF
 
 # Print header
 echo "=========================================="
-echo "KODI Channel Switching Debug Tool"
+echo "KODI Step-by-Step Debug Script"
 echo "=========================================="
 echo "Host: $KODI_HOST"
 echo "Port: $KODI_PORT"
@@ -120,138 +118,83 @@ if [ -n "$KODI_USER" ] && [ -n "$KODI_PASS" ]; then
 else
     echo "Auth: None"
 fi
+echo "Test Video: $TEST_VIDEO"
 echo "=========================================="
 echo ""
 
-# Test if jq is available (for pretty JSON)
-if ! command -v jq >/dev/null 2>&1; then
-    echo "Note: jq not found - JSON output will not be formatted"
-    echo ""
-fi
-
-# Pre-flight checks
-echo "=== Pre-flight Checks ==="
-echo "1. Testing if KODI is accessible on $KODI_HOST:$KODI_PORT..."
-if command -v nc >/dev/null 2>&1 || command -v netcat >/dev/null 2>&1; then
-    if nc -z -w 2 "$KODI_HOST" "$KODI_PORT" 2>/dev/null || netcat -z -w 2 "$KODI_HOST" "$KODI_PORT" 2>/dev/null; then
-        echo "✓ Port $KODI_PORT is open on $KODI_HOST"
-    else
-        echo "✗ ERROR: Port $KODI_PORT is NOT accessible on $KODI_HOST"
-        echo ""
-        echo "Possible issues:"
-        echo "  - KODI is not running"
-        echo "  - KODI JSON-RPC is disabled"
-        echo "  - Wrong port (check KODI settings -> Services -> Control -> Allow remote control)"
-        echo "  - Wrong host (if remote, check firewall)"
-        echo ""
-        echo "Checking for KODI processes..."
-        ps aux | grep -i kodi | grep -v grep || echo "No KODI processes found"
-        echo ""
-        echo "To enable JSON-RPC in KODI:"
-        echo "  Settings -> Services -> Control -> Enable HTTP and set port"
-        echo ""
-        read -p "Press Enter to continue anyway, or Ctrl+C to exit..."
-    fi
-else
-    echo "Note: nc/netcat not available, skipping port check"
-fi
+# Step 1: Test Default Port Authentication
+echo "=== Step 1: Test Default Port Authentication ==="
+echo "Testing simple application request (Application.GetProperties)..."
 echo ""
-
-# Step 1: Test Basic Connectivity
-echo "=== Step 1: Test Basic Connectivity ==="
-echo "Testing JSON-RPC accessibility..."
-send_kodi_debug "JSONRPC.Ping" "{}"
-
-echo "Getting active players..."
-send_kodi_debug "Player.GetActivePlayers" "{}"
-
-echo "Getting application properties..."
 send_kodi_debug "Application.GetProperties" '{"properties": ["version"]}'
+sleep 1
 
-# Step 2: Test File Path Handling (interactive)
-echo "=== Step 2: Test File Path Handling ==="
-echo "Enter a test video file path to test (or press Enter to skip):"
-read -r test_file
-
-if [ -n "$test_file" ] && [ -f "$test_file" ]; then
-    echo "Testing with file: $test_file"
-    echo ""
-    
-    # Convert to file:// URL with proper encoding
-    file_url="file://$test_file"
-    # URL encode: spaces -> %20, # -> %23, etc.
-    # For now, just handle spaces (bash native encoding)
-    file_url="${file_url// /%20}"
-    file_url="${file_url//#/%23}"
-    
-    echo "Original path: $test_file"
-    echo "File URL (encoded): $file_url"
-    echo "Note: If file has special chars, you may need to test manual encoding"
-    echo ""
-    
-    # Test with Playlist.Add
-    echo "Testing Playlist.Add..."
-    send_kodi_debug "Playlist.Add" "{\"playlistid\": 1, \"item\": {\"file\": \"$file_url\"}}"
-    
-    # Test with Player.Open
-    echo "Testing Player.Open..."
-    send_kodi_debug "Player.Open" "{\"item\": {\"file\": \"$file_url\"}}"
-else
-    echo "Skipping file path test (no file provided or file not found)"
-fi
+# Step 2: Test All player_control.sh Commands
+echo "=== Step 2: Test All player_control.sh Commands ==="
 echo ""
 
-# Step 3: Test Playlist.Clear
-echo "=== Step 3: Test Playlist.Clear ==="
+# Convert test video path to file:// URL format
+file_url="$TEST_VIDEO"
+if [[ ! "$file_url" =~ ^file:// ]] && [[ ! "$file_url" =~ ^http ]]; then
+    file_url="file://$file_url"
+fi
+# Escape special characters for JSON
+file_url=$(escape_json_string "$file_url")
+
+echo "Test file URL: $file_url"
+echo ""
+
+# Test 1: clear command
+echo "Test 1: clear command"
+echo "  -> Playlist.Clear + Input.Back"
+echo ""
 send_kodi_debug "Playlist.Clear" '{"playlistid": 1}'
+sleep 1
+send_kodi_debug "Input.Back" '{}'
+sleep 1
 
-# Step 4: Test Playlist.GetItems (check playlist state)
-echo "=== Step 4: Check Playlist State ==="
-send_kodi_debug "Playlist.GetItems" '{"playlistid": 1}'
-
-# Step 5: Test with example file path (if provided)
-if [ -n "$test_file" ] && [ -f "$test_file" ]; then
-    echo "=== Step 5: Test Complete Flow ==="
-    
-    file_url="file://$test_file"
-    file_url="${file_url// /%20}"
-    
-    # Clear playlist
-    echo "1. Clearing playlist..."
-    send_kodi_debug "Playlist.Clear" '{"playlistid": 1}'
-    sleep 1
-    
-    # Add first file with Player.Open (should auto-play)
-    echo "2. Opening first file with Player.Open..."
-    send_kodi_debug "Player.Open" "{\"item\": {\"file\": \"$file_url\"}}"
-    sleep 2
-    
-    # Check active players
-    echo "3. Checking active players..."
-    send_kodi_debug "Player.GetActivePlayers" "{}"
-    sleep 1
-    
-    # Get player properties to see if playing
-    echo "4. Getting player properties..."
-    send_kodi_debug "Player.GetProperties" '{"playerid": 1, "properties": ["time", "totaltime", "speed"]}'
-    sleep 1
-    
-    # Test Player.GoNext
-    echo "5. Testing Player.GoNext..."
-    send_kodi_debug "Player.GoNext" '{"playerid": 1, "to": "next"}'
-    sleep 1
-    
-    # Test Player.SetRepeat
-    echo "6. Testing Player.SetRepeat (all)..."
-    send_kodi_debug "Player.SetRepeat" '{"playerid": 1, "repeat": "all"}'
-    sleep 1
-    
-    echo "7. Getting repeat status..."
-    send_kodi_debug "Player.GetProperties" '{"playerid": 1, "properties": ["repeat"]}'
-fi
-
+# Test 2: add command
+echo "Test 2: add command"
+echo "  -> Player.Open with test video"
 echo ""
+send_kodi_debug "Player.Open" "{\"item\": {\"file\": \"$file_url\"}}"
+sleep 2
+
+# Test 3: enqueue command
+echo "Test 3: enqueue command"
+echo "  -> Playlist.Add with test video"
+echo ""
+send_kodi_debug "Playlist.Add" "{\"playlistid\": 1, \"item\": {\"file\": \"$file_url\"}}"
+sleep 1
+
+# Test 4: next command
+echo "Test 4: next command"
+echo "  -> Player.GoTo to next"
+echo ""
+send_kodi_debug "Player.GoTo" '{"playerid": 1, "to": "next"}'
+sleep 1
+
+# Test 5: loop on command
+echo "Test 5: loop on command"
+echo "  -> Player.SetRepeat (all)"
+echo ""
+send_kodi_debug "Player.SetRepeat" '{"playerid": 1, "repeat": "all"}'
+sleep 1
+
+# Test 6: loop off command
+echo "Test 6: loop off command"
+echo "  -> Player.SetRepeat (off)"
+echo ""
+send_kodi_debug "Player.SetRepeat" '{"playerid": 1, "repeat": "off"}'
+sleep 1
+
+# Test 7: seek command
+echo "Test 7: seek command"
+echo "  -> Player.Seek (50%)"
+echo ""
+send_kodi_debug "Player.Seek" '{"playerid": 1, "value": {"percentage": 50}}'
+sleep 1
+
 echo "=========================================="
 echo "Debug session complete!"
 echo "=========================================="
-

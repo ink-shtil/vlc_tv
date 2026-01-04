@@ -14,13 +14,13 @@ log_with_time() {
 echo "$(date '+%Y-%m-%d %H:%M:%S') Launching VLC in LXTerminal..."
 lxterminal -e "bash /home/pda/vlc_tv/start.sh" &
 
-echo "$(date '+%Y-%m-%d %H:%M:%S') Waiting 2 seconds before running switch_channel.sh current..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') Waiting 2 seconds before running choose_channel.sh 0..."
 sleep 5
-echo "$(date '+%Y-%m-%d %H:%M:%S') Starting switch_channel.sh current in background..."
+echo "$(date '+%Y-%m-%d %H:%M:%S') Starting choose_channel.sh 0 (random channel) in background..."
 (
-  echo "========== switch_channel.sh current started at $(date '+%Y-%m-%d %H:%M:%S') =========="
-  bash /home/pda/vlc_tv/switch_channel.sh current 2>&1 | log_with_time
-  echo "========== switch_channel.sh current finished at $(date '+%Y-%m-%d %H:%M:%S') =========="
+  echo "========== choose_channel.sh 0 started at $(date '+%Y-%m-%d %H:%M:%S') =========="
+  bash /home/pda/vlc_tv/choose_channel.sh 0 2>&1 | log_with_time
+  echo "========== choose_channel.sh 0 finished at $(date '+%Y-%m-%d %H:%M:%S') =========="
 ) >> "$SWITCH_LOG" &
 
 echo "$(date '+%Y-%m-%d %H:%M:%S') All background jobs started."

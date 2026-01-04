@@ -188,6 +188,18 @@ add_keybind "A-Right" "$USER_HOME/vlc_tv/hotkey_next.sh" "Next Channel"
 add_keybind "A-Left" "$USER_HOME/vlc_tv/hotkey_prev.sh" "Previous Channel"
 add_keybind "A-Up" "$USER_HOME/vlc_tv/hotkey_current.sh" "Current Channel"
 
+# Add keybinds for channel numbers (Alt+0 through Alt+9)
+add_keybind "A-0" "$USER_HOME/vlc_tv/choose_channel.sh 0" "Channel 0"
+add_keybind "A-1" "$USER_HOME/vlc_tv/choose_channel.sh 1" "Channel 1"
+add_keybind "A-2" "$USER_HOME/vlc_tv/choose_channel.sh 2" "Channel 2"
+add_keybind "A-3" "$USER_HOME/vlc_tv/choose_channel.sh 3" "Channel 3"
+add_keybind "A-4" "$USER_HOME/vlc_tv/choose_channel.sh 4" "Channel 4"
+add_keybind "A-5" "$USER_HOME/vlc_tv/choose_channel.sh 5" "Channel 5"
+add_keybind "A-6" "$USER_HOME/vlc_tv/choose_channel.sh 6" "Channel 6"
+add_keybind "A-7" "$USER_HOME/vlc_tv/choose_channel.sh 7" "Channel 7"
+add_keybind "A-8" "$USER_HOME/vlc_tv/choose_channel.sh 8" "Channel 8"
+add_keybind "A-9" "$USER_HOME/vlc_tv/choose_channel.sh 9" "Channel 9"
+
 echo "All keybinds configured. Please restart Labwc or reload its configuration to apply the new keybinds."
 
 set +x  # Disable debug output

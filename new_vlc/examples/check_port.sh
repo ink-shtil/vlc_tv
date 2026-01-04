@@ -2,7 +2,7 @@
 # Script to check if a port is open/listening on a host (default: localhost).
 # Usage: ./check_port.sh <port> [host]
 # Example: ./check_port.sh 4212
-#          ./check_port.sh 80 192.168.0.12
+#          ./check_port.sh 80 192.168.0.17
 
 PORT="${1:-4212}"
 HOST="${2:-127.0.0.1}"

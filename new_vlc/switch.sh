@@ -90,9 +90,36 @@ function play_random_video() {
     send_command "clear"
     random_file_or_directory "add" "/home/pda/vlc_tv/noises"
 
-    # Build playlist with 20 random videos
-    for((i=0;i<20;i++)); do
-        random_file_or_directory "enqueue" "$directory"
+    # Build playlist with up to 20 unique random videos (no duplicates)
+    # Collect all available items and shuffle them
+    local total_items
+    total_items=$(find "$directory" -mindepth 1 -maxdepth 1 | wc -l)
+    
+    if [ "$total_items" -eq 0 ]; then
+        echo "No items found in directory: $directory"
+        return 1
+    fi
+    
+    # Determine how many items to add (up to 20, or all if fewer)
+    local items_to_add=20
+    if [ "$total_items" -lt 20 ]; then
+        items_to_add=$total_items
+    fi
+    
+    # Shuffle items and add unique ones
+    find "$directory" -mindepth 1 -maxdepth 1 | shuf | head -n "$items_to_add" | while IFS= read -r item; do
+        if [ -z "$item" ]; then
+            continue
+        fi
+        # Check if the item is a directory
+        if [ -d "$item" ]; then
+            # Enqueue all files from the directory
+            enqueue_all_files_from_directory "enqueue" "$item"
+        else
+            # Enqueue the file
+            echo "->>> enqueue $item"
+            send_command "enqueue" "$item"
+        fi
     done
 
     # Enable loop for continuous playback
@@ -102,8 +129,8 @@ function play_random_video() {
 
     # Start playback and seek to random position
     send_command "next"
-    local seek_percent=$(get_random_number 10 60)
-    send_command "seek" "${seek_percent}%"
+    # local seek_percent=$(get_random_number 10 60)
+    # send_command "seek" "${seek_percent}%"
 }
 
 play_random_video "$1"

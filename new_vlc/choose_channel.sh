@@ -2,6 +2,7 @@
 # Choose channel by number prefix (01*, 02*, etc.)
 # Usage: ./choose_channel.sh <number>
 # Example: ./choose_channel.sh 1  (selects directory starting with "01")
+#          ./choose_channel.sh 0  (randomly selects channel from 1-8)
 
 PARENT_DIR="/home/pda/vlc_tv"
 CHANNELS_DIR_FILE="$PARENT_DIR/channels_directory.txt"
@@ -11,6 +12,7 @@ EXAMPLE_CHANNELS_DIR="/media/pda/SanDisk/videos/"
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <channel_number>"
     echo "Example: $0 1  (selects directory starting with '01')"
+    echo "         $0 0  (randomly selects channel from 1-8)"
     exit 1
 fi
 
@@ -20,6 +22,12 @@ CHANNEL_NUM="$1"
 if ! [[ "$CHANNEL_NUM" =~ ^[0-9]+$ ]]; then
     echo "Error: Channel number must be a positive integer"
     exit 1
+fi
+
+# Handle channel 0 (random selection from 1-8)
+if [ "$CHANNEL_NUM" -eq 0 ]; then
+    CHANNEL_NUM=$((RANDOM % 8 + 1))
+    #echo "Random channel selected: $CHANNEL_NUM"
 fi
 
 # Format as zero-padded (01, 02, etc.)
